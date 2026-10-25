@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Affirmation Studio</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Affirmations">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0C1318">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: two working columns (Voice | Mix) above a fixed transport bar that carries the breath orb */
+:root{
+  --bg:#EDF0F3; --surface:#F9FAFB; --ink:#14232E; --muted:#5A6A75; --line:#D2D9DF;
+  --accent:#B9771F; --accent-ink:#FFFFFF; --wave:#2F6F80; --rec:#C2412D;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Helvetica Neue",Arial,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:10px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#0C1318; --surface:#131D24; --ink:#E3EAEE; --muted:#8C9DA8; --line:#22313B;
+  --accent:#E2A24A; --accent-ink:#1A1206; --wave:#6DB2C3; --rec:#E8664F; color-scheme:dark;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);padding-bottom:132px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header h1{font:700 clamp(28px,4vw,40px)/1.1 var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:24px}
+@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font:700 20px/1.2 var(--f-display);margin:0}
+h3{font:600 12px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:4px 0 0}
+.hint{color:var(--muted);font-size:14px;margin:0}
+textarea{width:100%;min-height:150px;resize:vertical;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:16px/1.55 var(--f-body)}
+textarea:focus,input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--muted)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.chip{font-size:14px;padding:6px 11px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip .hz{font:12px var(--f-mono);opacity:.75;margin-left:4px}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.prompter{border:1px dashed var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.prompt-line{font:500 clamp(20px,2.6vw,26px)/1.3 var(--f-display);min-height:2.6em;text-wrap:balance}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.spacer{flex:1}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px}
+.rec-btn{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.rec-btn .dot{width:12px;height:12px;border-radius:50%;background:var(--rec)}
+.rec-btn.on{background:var(--rec);color:#fff;border-color:var(--rec)}
+.rec-btn.on .dot{background:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;flex:1;min-width:80px}
+.meter i{display:block;height:100%;width:0;background:var(--wave);transition:width 60ms linear}
+.takes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.takes li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.takes li:first-child{border-top:0}
+.takes .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.takes .del.armed{background:var(--rec);color:#fff;border-color:var(--rec)}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+.field{display:grid;grid-template-columns:132px minmax(0,1fr) 112px;align-items:center;gap:10px;font-size:14px}
+.field output{font:13px var(--f-mono);color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:480px){.field{grid-template-columns:minmax(0,1fr) auto}.field input[type=range]{grid-column:1/-1;order:3}}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+select,input[type=number]{font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+input[type=number]{width:84px}
+.note{font-size:14px;border-left:3px solid var(--wave);padding:2px 0 2px 10px;color:var(--muted);margin:0}
+.file{font-size:14px}
+.research ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.transport{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:5;
+  padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.transport .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.orb-box{width:84px;height:84px;display:grid;place-items:center;position:relative;flex:none}
+.orb-ring{position:absolute;inset:4px;border-radius:50%;border:1px solid var(--line)}
+.orb{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 35%,color-mix(in srgb,var(--wave) 55%,transparent),var(--wave));transform:scale(.55);will-change:transform}
+.breath{display:flex;flex-direction:column;min-width:120px}
+.breath b{font:700 18px/1.1 var(--f-display)}
+.play{min-width:110px;padding:11px 18px;font-size:16px}
+.status{color:var(--muted);font-size:14px;min-width:0;flex:1 1 200px}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.result{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.result audio{width:100%}
+@media (max-width:560px){
+  body{padding-bottom:210px}
+  .orb-box{width:56px;height:56px}.orb{width:50px;height:50px}
+  .transport .in{gap:10px}
+  .play{min-width:92px}
+  .status{flex-basis:100%;order:9}
+  select,input[type=number],textarea{font-size:16px}
+  .toast{bottom:220px}
+}
+.toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:14px;max-width:min(92vw,520px);z-index:9}
+@media (prefers-reduced-motion:reduce){.orb{transition:none}.rec-btn.on .dot{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Affirmation Studio</h1>
+    <p>Write your script, record it in your own voice, then layer tones and music under it. The music swells at your breathing rate so every session doubles as paced breathing.</p>
+  </header>
+
+  <div class="cols">
+    <!-- VOICE -->
+    <div class="col">
+      <section class="card">
+        <h2>Your script</h2>
+        <textarea id="script" data-k="script" aria-label="Affirmation script, one line per affirmation"></textarea>
+        <div class="chips" id="templates">
+          <button class="chip" data-tpl="When I [situation], I will [action].">+ If-then plan</button>
+          <button class="chip" data-tpl="I care about [value], and today I show it by [action].">+ Values</button>
+          <button class="chip" data-tpl="I am becoming someone who [habit], one day at a time.">+ Identity</button>
+          <button class="chip" data-tpl="When I feel [urge], I take three slow breaths and [replacement].">+ Urge swap</button>
+        </div>
+        <p class="hint">One affirmation per line. Lines that name a cue and an action ("When I…, I will…") have the strongest evidence. Keep "I am" lines believable; claims that feel false can backfire.</p>
+      </section>
+
+      <section class="card">
+        <h2>Record</h2>
+        <div class="prompter">
+          <div class="row"><span class="mono" id="line-count">Line 1 of 1</span><span class="spacer"></span>
+            <button id="prev" aria-label="Previous line">◀</button><button id="next" aria-label="Next line">▶</button></div>
+          <div class="prompt-line" id="prompt-line"></div>
+          <div class="row">
+            <button class="rec-btn" id="rec"><span class="dot"></span><span id="rec-label">Record line</span></button>
+            <span class="mono" id="rec-time">0:00</span>
+            <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+          </div>
+        </div>
+        <p class="hint">Speak slowly and warmly, as if to a friend. Silence at the start and end of each take is trimmed automatically, and quiet takes are levelled.</p>
+        <label class="file">Or add recordings from your phone: <input type="file" id="upload-takes" accept="audio/*" multiple></label>
+        <h3>Takes in the mix</h3>
+        <ul class="takes" id="takes"></ul>
+      </section>
+    </div>
+
+    <!-- MIX -->
+    <div class="col">
+      <section class="card">
+        <h2>Binaural beat</h2>
+        <div class="chips" id="beats"></div>
+        <div class="row" style="font-size:14px"><label for="beat">Custom beat</label><input type="number" id="beat" data-k="beat" min="0" max="45" step="0.5"><span class="mono">Hz</span></div>
+        <p class="note" id="beat-note"></p>
+        <div class="field"><label for="carrier">Carrier tone</label><input type="range" id="carrier" data-k="carrier" min="100" max="400" step="5"><output data-o="carrier"></output></div>
+        <div class="field"><label for="beatVol">Beat volume</label><input type="range" id="beatVol" data-k="beatVol" min="0" max="0.3" step="0.01"><output data-o="beatVol"></output></div>
+        <div class="row" style="font-size:14px"><input type="checkbox" id="glide" data-k="glide"><label for="glide">Start at 10 Hz and glide to the target over</label>
+          <select id="glideMin" data-k="glideMin" data-num><option value="2">2 min</option><option value="3">3 min</option><option value="5">5 min</option></select></div>
+        <p class="hint">Headphones required: each ear gets a slightly different tone, and the beat is the difference between them.</p>
+      </section>
+
+      <section class="card">
+        <h2>Ambient bed</h2>
+        <div class="row" style="font-size:14px"><input type="checkbox" id="padOn" data-k="padOn"><label for="padOn">Synth pad</label><span class="spacer"></span>
+          <label for="mood">Mood</label><select id="mood" data-k="mood"><option value="warm">Warm (major)</option><option value="deep">Deep (minor)</option></select></div>
+        <div class="field"><label for="padVol">Pad volume</label><input type="range" id="padVol" data-k="padVol" min="0" max="1" step="0.01"><output data-o="padVol"></output></div>
+        <div class="field"><label for="oceanVol">Ocean wash</label><input type="range" id="oceanVol" data-k="oceanVol" min="0" max="1" step="0.01"><output data-o="oceanVol"></output></div>
+        <div class="row" style="font-size:14px"><input type="checkbox" id="swell" data-k="swell"><label for="swell">Swell with my breathing pace</label></div>
+        <div class="field"><label for="bpm">Breathing pace</label><input type="range" id="bpm" data-k="bpm" min="4" max="8" step="0.5"><output data-o="bpm"></output></div>
+        <p class="note">Breathing near 6 a minute (0.1 Hz) is the one rhythm here with strong evidence: it raises heart rate variability and settles stress. Breathe in as the sound rises, out as it falls.</p>
+      </section>
+
+      <section class="card">
+        <h2>Your music</h2>
+        <label class="file">Loop a track under the mix: <input type="file" id="music-file" accept="audio/*"></label>
+        <div class="row" style="font-size:14px"><span id="music-name" class="hint">No track added.</span><span class="spacer"></span><button id="music-clear" hidden>Remove</button></div>
+        <div class="field"><label for="musicVol">Music volume</label><input type="range" id="musicVol" data-k="musicVol" min="0" max="1" step="0.01"><output data-o="musicVol"></output></div>
+      </section>
+
+      <section class="card">
+        <h2>Voice in the mix</h2>
+        <div class="field"><label for="voiceVol">Voice volume</label><input type="range" id="voiceVol" data-k="voiceVol" min="0" max="1.5" step="0.01"><output data-o="voiceVol"></output></div>
+        <div class="field"><label for="reverb">Room</label><input type="range" id="reverb" data-k="reverb" min="0" max="1" step="0.01"><output data-o="reverb"></output></div>
+        <div class="field"><label for="repeats">Repeat each line</label><input type="range" id="repeats" data-k="repeats" min="1" max="200" step="1"><output data-o="repeats"></output></div>
+        <p class="note" id="repeat-summary"></p>
+        <div class="field"><label for="gap">Pause between</label><input type="range" id="gap" data-k="gap" min="2" max="30" step="1"><output data-o="gap"></output></div>
+        <div class="field"><label for="delay">First voice at</label><input type="range" id="delay" data-k="delay" min="0" max="120" step="5"><output data-o="delay"></output></div>
+        <div class="row" style="font-size:14px"><label for="order">Order</label><select id="order" data-k="order"><option value="seq">Cycle through lines</option><option value="grouped">Each line, all repeats in a row</option><option value="shuffle">Shuffled</option></select></div>
+      </section>
+
+      <section class="card research">
+        <h2>What the research says</h2>
+        <ul>
+          <li>No brainwave frequency has been shown to make beliefs "install" faster. Choose a beat because you like how it feels.</li>
+          <li>Your own voice, daily repetition and a clear cue-and-action plan do the work. New habits took a median of 66 days in the best-known study.</li>
+          <li>Listen while awake and relaxed. Learning new material in sleep is limited to simple associations, so a pre-sleep session beats an all-night loop.</li>
+          <li>The breathing pace is the most reliable part of a session; keep it on.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="transport">
+  <div class="in">
+    <div class="orb-box" aria-hidden="true"><div class="orb-ring"></div><div class="orb" id="orb"></div></div>
+    <div class="breath"><b id="breath-word">Breathe in</b><span class="mono" id="breath-rate">6.0 / min</span></div>
+    <button class="primary play" id="play">Play</button>
+    <span class="mono" id="clock">0:00 / 15:00</span>
+    <label class="row" style="font-size:14px;gap:6px" for="minutes">Length
+      <select id="minutes" data-k="minutes" data-num><option value="0">Fit repeats</option><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="30">30 min</option></select></label>
+    <div class="status"><span id="status">Ready.</span><div class="bar" id="export-bar" hidden><i></i></div></div>
+    <button id="export">Export WAV</button>
+  </div>
+  <div class="in result" id="result" hidden>
+    <audio id="result-audio" controls playsinline></audio>
+    <div class="row"><button class="primary" id="share" hidden>Save or share</button><a id="result-link" class="mono" download>Download WAV</a><span class="spacer"></span><button id="result-close">Close</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const DEFAULTS = {
+  script: "When I sit down to work, I will start with the hardest task first.\nWhen I feel the urge to scroll, I take three slow breaths and stand up.\nI care about my health, and today I show it by moving my body.\nI am becoming someone who keeps promises to myself.",
+  beat: 10, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3,
+  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, bpm: 6,
+  musicVol: 0.5, voiceVol: 0.9, reverb: 0.25, gap: 6, delay: 15, order: "seq", minutes: 0, repeats: 70
+};
+const BEATS = [
+  {v:0, n:"Off"}, {v:2, n:"Delta"}, {v:6, n:"Theta"}, {v:10, n:"Alpha"},
+  {v:13, n:"SMR"}, {v:18, n:"Beta"}, {v:40, n:"Gamma"}
+];
+function beatNote(b){
+  if (!b) return "No beat. Voice, music and breathing pace only.";
+  if (b < 4) return "Delta (0.5–4 Hz) is the deep-sleep band. Playing it does not create sleep learning; use it only if it helps you drift off.";
+  if (b < 8) return "Theta (4–8 Hz) is the popular \"programming\" band. Controlled studies find unreliable entrainment and no boost to suggestibility, but many people find it relaxing.";
+  if (b < 12) return "Alpha (8–12 Hz) matches relaxed, eyes-closed wakefulness. A good default for an awake listening session.";
+  if (b < 15) return "SMR (12–15 Hz) is linked to calm, still focus in neurofeedback work.";
+  if (b < 30) return "Beta (15–30 Hz) is active, alert thinking. Better for a morning session than a wind-down.";
+  return "Gamma (30+ Hz). The 40 Hz research uses flicker and clicks, not binaural beats; treat this as a texture.";
+}
+const MOODS = {
+  warm: [[48,55,64,71],[45,52,60,67],[41,48,57,64],[43,50,59,62]],
+  deep: [[45,52,60,64],[41,48,57,60],[48,55,60,67],[43,50,59,62]]
+};
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function playbackSession(){ try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {} }
+const midi = m => 440 * Math.pow(2, (m - 69) / 12);
+const $ = s => document.querySelector(s);
+const fmtTime = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
+const pct = max => v => Math.round(v / max * 100) + "%";
+const FMT = {
+  carrier: v => v + " Hz", beatVol: pct(0.3), padVol: pct(1), oceanVol: pct(1), musicVol: pct(1),
+  voiceVol: pct(1), reverb: pct(1), gap: v => v + " s", delay: v => v + " s", repeats: v => v + "×",
+  bpm: v => v.toFixed(1) + "/min · " + (v/60).toFixed(3) + " Hz"
+};
+
+// ---------- settings ----------
+let S = {...DEFAULTS};
+try {
+  const saved = JSON.parse(localStorage.getItem("as-settings") || "{}");
+  if (!("repeats" in saved)) delete saved.minutes; // first run with repeats: default length to "fit repeats"
+  Object.assign(S, saved);
+} catch (e) {}
+function saveSettings(){ try { localStorage.setItem("as-settings", JSON.stringify(S)); } catch (e) {} }
+
+function sequenceSec(s, durations){
+  return s.repeats * durations.reduce((a, d) => a + d + s.gap, 0);
+}
+function sessionSec(s, durations){
+  if (s.minutes > 0 || !durations.length) return (s.minutes || 15) * 60;
+  return s.delay + sequenceSec(s, durations) + 20;
+}
+const takeDurations = () => takes.filter(t => t.on && !t.broken).map(t => t.duration);
+function renderRepeatSummary(){
+  const d = takeDurations(), el = $("#repeat-summary");
+  if (!d.length) { el.textContent = `Each line plays ${S.repeats} times once you record or tick a take.`; return; }
+  const seq = sequenceSec(S, d);
+  let msg = `${d.length} line${d.length > 1 ? "s" : ""} × ${S.repeats} = ${d.length * S.repeats} plays, ${fmtTime(seq)} of voice.`;
+  if (S.minutes > 0 && S.delay + seq > S.minutes * 60) msg += ` The ${S.minutes}-minute length cuts this short; choose Fit repeats to hear them all.`;
+  else if (S.minutes === 0) msg += ` Session length ${fmtTime(sessionSec(S, d))}.`;
+  el.textContent = msg;
+}
+function syncControls(){
+  document.querySelectorAll("[data-k]").forEach(el => {
+    const k = el.dataset.k;
+    if (el === document.activeElement && el.type === "number") return;
+    if (el.type === "checkbox") el.checked = !!S[k]; else el.value = S[k];
+  });
+  document.querySelectorAll("[data-o]").forEach(o => { const k = o.dataset.o; o.textContent = FMT[k] ? FMT[k](+S[k]) : S[k]; });
+  document.querySelectorAll("#beats .chip").forEach(c => c.setAttribute("aria-pressed", String(+c.dataset.v === +S.beat)));
+  $("#beat-note").textContent = beatNote(+S.beat);
+  $("#breath-rate").textContent = (+S.bpm).toFixed(1) + " / min";
+  if (!live) $("#clock").textContent = "0:00 / " + fmtTime(sessionSec(S, takeDurations()));
+  renderRepeatSummary();
+}
+document.addEventListener("input", e => {
+  const el = e.target; const k = el.dataset && el.dataset.k; if (!k) return;
+  if (el.type === "checkbox") S[k] = el.checked;
+  else if (el.type === "range" || el.type === "number" || "num" in el.dataset) S[k] = parseFloat(el.value) || 0;
+  else S[k] = el.value;
+  saveSettings();
+  if (k === "script") renderPrompter(); else syncControls();
+});
+
+$("#beats").innerHTML = BEATS.map(b => `<button class="chip" data-v="${b.v}">${b.n}${b.v ? `<span class="hz">${b.v} Hz</span>` : ""}</button>`).join("");
+$("#beats").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  S.beat = +c.dataset.v; saveSettings(); syncControls();
+});
+$("#templates").addEventListener("click", e => {
+  const c = e.target.closest("[data-tpl]"); if (!c) return;
+  const ta = $("#script"); const t = c.dataset.tpl;
+  ta.value = ta.value.replace(/\s*$/, "") + (ta.value.trim() ? "\n" : "") + t;
+  S.script = ta.value; saveSettings(); renderPrompter();
+  ta.focus(); const i = ta.value.lastIndexOf("["); if (i >= 0) ta.setSelectionRange(i, ta.value.indexOf("]", i) + 1);
+});
+
+let toastTimer;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 4500); }
+
+// ---------- storage (IndexedDB) ----------
+let dbp;
+function idb(){
+  if (!dbp) dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("affirmation-studio", 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore("takes", {keyPath:"id"}); r.result.createObjectStore("files", {keyPath:"id"}); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  return dbp;
+}
+async function store(name, mode, fn){
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const t = db.transaction(name, mode); const req = fn(t.objectStore(name));
+    t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+  });
+}
+
+// ---------- decoding ----------
+const decodeCtx = new OfflineAudioContext(1, 1, 44100);
+const buffers = new Map();
+function prepVoice(buf){
+  const d = buf.getChannelData(0), th = 0.015;
+  let a = 0, b = d.length - 1;
+  while (a < d.length && Math.abs(d[a]) < th) a++;
+  while (b > a && Math.abs(d[b]) < th) b--;
+  const pad = Math.floor(buf.sampleRate * 0.12);
+  a = Math.max(0, a - pad); b = Math.min(d.length - 1, b + pad);
+  if (b - a < buf.sampleRate * 0.3) { a = 0; b = d.length - 1; }
+  let peak = 0;
+  for (let c = 0; c < buf.numberOfChannels; c++) { const x = buf.getChannelData(c); for (let i = a; i <= b; i++) peak = Math.max(peak, Math.abs(x[i])); }
+  const gain = peak > 0 ? Math.min(4, 0.7 / peak) : 1;
+  const out = new AudioBuffer({length: b - a + 1, numberOfChannels: buf.numberOfChannels, sampleRate: buf.sampleRate});
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const src = buf.getChannelData(c).subarray(a, b + 1), dst = out.getChannelData(c);
+    for (let i = 0; i < src.length; i++) dst[i] = src[i] * gain;
+  }
+  return out;
+}
+async function decodeTake(take){
+  if (buffers.has(take.id)) return buffers.get(take.id);
+  const raw = await decodeCtx.decodeAudioData(await take.blob.arrayBuffer());
+  const buf = prepVoice(raw); buffers.set(take.id, buf); return buf;
+}
+
+// ---------- takes ----------
+let takes = [];
+async function loadTakes(){
+  try { takes = (await store("takes", "readonly", s => s.getAll())) || []; } catch (e) { takes = []; toast("Saved takes could not be loaded in this browser window."); }
+  takes.sort((a, b) => a.created - b.created);
+  for (const t of takes) { try { t.duration = (await decodeTake(t)).duration; } catch (e) { t.duration = 0; t.broken = true; } }
+  renderTakes();
+}
+async function addTake(blob, name){
+  const take = {id: crypto.randomUUID(), name, blob, created: Date.now(), on: true};
+  try { take.duration = (await decodeTake(take)).duration; } catch (e) { toast("That audio file could not be read. Try an MP3, M4A, WAV or WebM file."); return; }
+  try { await store("takes", "readwrite", s => s.put({id: take.id, name, blob, created: take.created, on: true})); }
+  catch (e) { toast("Recorded, but this browser would not save it. Export your mix before closing the page."); }
+  takes.push(take); renderTakes();
+}
+function renderTakes(){
+  const ul = $("#takes");
+  if (!takes.length) { ul.innerHTML = `<li class="empty" style="display:block">No takes yet. Read the line above and press Record line.</li>`; return; }
+  ul.innerHTML = takes.map(t => `<li data-id="${t.id}">
+    <input type="checkbox" class="on" id="on-${t.id}" ${t.on ? "checked" : ""} aria-label="Include in mix">
+    <label class="name" for="on-${t.id}" title=""></label>
+    <span class="mono">${t.broken ? "error" : fmtTime(t.duration) + "." + String(Math.round((t.duration % 1) * 10))}</span>
+    <button class="hear" aria-label="Play take">▶</button>
+    <button class="del" aria-label="Delete take">Delete</button></li>`).join("");
+  syncControls();
+  ul.querySelectorAll("li[data-id]").forEach(li => { const t = takes.find(x => x.id === li.dataset.id); const l = li.querySelector(".name"); l.textContent = t.name; l.title = t.name; });
+}
+let audition = null;
+$("#takes").addEventListener("click", async e => {
+  const li = e.target.closest("li[data-id]"); if (!li) return;
+  const t = takes.find(x => x.id === li.dataset.id);
+  if (e.target.classList.contains("hear")) {
+    if (audition) { audition.pause(); }
+    audition = new Audio(URL.createObjectURL(t.blob)); audition.play();
+  } else if (e.target.classList.contains("del")) {
+    const b = e.target;
+    if (!b.classList.contains("armed")) { b.classList.add("armed"); b.textContent = "Confirm"; setTimeout(() => { b.classList.remove("armed"); b.textContent = "Delete"; }, 3000); return; }
+    try { await store("takes", "readwrite", s => s.delete(t.id)); } catch (err) {}
+    takes = takes.filter(x => x.id !== t.id); buffers.delete(t.id); renderTakes();
+  }
+});
+$("#takes").addEventListener("change", async e => {
+  if (!e.target.classList.contains("on")) return;
+  const t = takes.find(x => x.id === e.target.closest("li").dataset.id); t.on = e.target.checked; syncControls();
+  try { await store("takes", "readwrite", s => s.put({id: t.id, name: t.name, blob: t.blob, created: t.created, on: t.on})); } catch (err) {}
+});
+$("#upload-takes").addEventListener("change", async e => {
+  for (const f of e.target.files) await addTake(f, f.name.replace(/\.[^.]+$/, ""));
+  e.target.value = "";
+});
+
+// ---------- prompter + recording ----------
+let lineIdx = 0;
+const lines = () => S.script.split("\n").map(l => l.trim()).filter(Boolean);
+function renderPrompter(){
+  const L = lines(); lineIdx = Math.min(lineIdx, Math.max(0, L.length - 1));
+  $("#prompt-line").textContent = L[lineIdx] || "Write a line in your script to record it.";
+  $("#line-count").textContent = L.length ? `Line ${lineIdx + 1} of ${L.length}` : "No lines yet";
+}
+$("#prev").onclick = () => { lineIdx = Math.max(0, lineIdx - 1); renderPrompter(); };
+$("#next").onclick = () => { lineIdx = Math.min(lines().length - 1, lineIdx + 1); renderPrompter(); };
+
+let rec = null, recStream = null, recChunks = [], recT0 = 0, meterCtx = null, recRAF = 0;
+async function startRec(){
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast("This browser cannot record audio. Use Chrome, Safari or Firefox, opened from start.sh."); return; }
+  try { recStream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: false, noiseSuppression: true, autoGainControl: true}}); }
+  catch (e) { toast("Microphone access was blocked. Allow the microphone for this page in your browser's site settings, then press Record again."); return; }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(m => MediaRecorder.isTypeSupported(m));
+  rec = new MediaRecorder(recStream, mime ? {mimeType: mime} : undefined);
+  recChunks = []; rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  const name = lines()[lineIdx] || "Take " + (takes.length + 1);
+  rec.onstop = async () => {
+    recStream.getTracks().forEach(t => t.stop());
+    if (meterCtx) meterCtx.close(); cancelAnimationFrame(recRAF); $("#meter").style.width = "0";
+    await addTake(new Blob(recChunks, {type: rec.mimeType}), name);
+    if (lineIdx < lines().length - 1) { lineIdx++; renderPrompter(); }
+  };
+  rec.start(); recT0 = performance.now();
+  $("#rec").classList.add("on"); $("#rec-label").textContent = "Stop";
+  meterCtx = new AudioContext(); meterCtx.resume().catch(() => {}); const an = meterCtx.createAnalyser(); an.fftSize = 1024;
+  meterCtx.createMediaStreamSource(recStream).connect(an);
+  const data = new Float32Array(an.fftSize);
+  const tick = () => {
+    an.getFloatTimeDomainData(data); let m = 0; for (const v of data) m = Math.max(m, Math.abs(v));
+    $("#meter").style.width = Math.min(100, m * 140) + "%";
+    $("#rec-time").textContent = fmtTime((performance.now() - recT0) / 1000);
+    recRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function stopRec(){ if (rec && rec.state !== "inactive") rec.stop(); $("#rec").classList.remove("on"); $("#rec-label").textContent = "Record line"; }
+$("#rec").onclick = () => (rec && rec.state === "recording") ? stopRec() : startRec();
+
+// ---------- music ----------
+let musicBuf = null;
+async function setMusic(blob, name, persist){
+  try { musicBuf = await decodeCtx.decodeAudioData(await blob.arrayBuffer()); }
+  catch (e) { toast("That music file could not be read. Try an MP3, M4A or WAV file."); return; }
+  $("#music-name").textContent = name; $("#music-clear").hidden = false;
+  if (persist) { try { await store("files", "readwrite", s => s.put({id: "music", name, blob})); } catch (e) {} }
+}
+$("#music-file").addEventListener("change", e => { const f = e.target.files[0]; if (f) setMusic(f, f.name, true); e.target.value = ""; });
+$("#music-clear").onclick = async () => {
+  musicBuf = null; $("#music-name").textContent = "No track added."; $("#music-clear").hidden = true;
+  try { await store("files", "readwrite", s => s.delete("music")); } catch (e) {}
+};
+(async () => { try { const m = await store("files", "readonly", s => s.get("music")); if (m) setMusic(m.blob, m.name, false); } catch (e) {} })();
+
+// ---------- mix engine (shared by live play and export) ----------
+function impulse(ctx, sec){
+  const len = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+  return b;
+}
+function oceanBuffer(ctx){
+  const sr = ctx.sampleRate, len = sr * 8, N = Math.floor(sr * 0.5), b = ctx.createBuffer(2, len, sr);
+  for (let c = 0; c < 2; c++) {
+    const raw = new Float32Array(len + N); let last = 0;
+    for (let i = 0; i < raw.length; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; raw[i] = last * 3.5; }
+    const d = b.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = i < N ? raw[i] * (i / N) + raw[len + i] * (1 - i / N) : raw[i];
+  }
+  return b;
+}
+function voiceOrder(n, repeats, mode){
+  const out = [];
+  if (mode === "grouped") { for (let i = 0; i < n; i++) for (let r = 0; r < repeats; r++) out.push(i); return out; }
+  for (let r = 0; r < repeats; r++) {
+    const cycle = [...Array(n).keys()];
+    if (mode === "shuffle" && n > 1) {
+      for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cycle[i], cycle[j]] = [cycle[j], cycle[i]]; }
+      if (cycle[0] === out[out.length - 1]) [cycle[0], cycle[n - 1]] = [cycle[n - 1], cycle[0]];
+    }
+    out.push(...cycle);
+  }
+  return out;
+}
+function buildMix(ctx, out, s, dur, voices, music){
+  const t0 = ctx.currentTime + 0.1, end = t0 + dur, fade = Math.min(15, dur / 6);
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 4; comp.connect(out);
+  const master = ctx.createGain(); master.connect(comp);
+  master.gain.setValueAtTime(0, t0); master.gain.linearRampToValueAtTime(1, t0 + fade);
+  master.gain.setValueAtTime(1, end - fade); master.gain.linearRampToValueAtTime(0, end);
+
+  // binaural beat: left = carrier - beat/2, right = carrier + beat/2
+  if (s.beat > 0 && s.beatVol > 0) {
+    const merge = ctx.createChannelMerger(2), g = ctx.createGain(); g.gain.value = s.beatVol;
+    merge.connect(g); g.connect(master);
+    const L = ctx.createOscillator(), R = ctx.createOscillator(), c = s.carrier;
+    const b0 = s.glide ? 10 : s.beat;
+    L.frequency.setValueAtTime(c - b0 / 2, t0); R.frequency.setValueAtTime(c + b0 / 2, t0);
+    if (s.glide && s.beat !== 10) {
+      const tg = t0 + Math.min(s.glideMin * 60, dur / 2);
+      L.frequency.linearRampToValueAtTime(c - s.beat / 2, tg); R.frequency.linearRampToValueAtTime(c + s.beat / 2, tg);
+    }
+    L.connect(merge, 0, 0); R.connect(merge, 0, 1);
+    L.start(t0); R.start(t0); L.stop(end); R.stop(end);
+  }
+
+  // breath swell: gain = (1 - d) + d * sin(2π · bpm/60 · t), rising = inhale
+  const swell = ctx.createGain(), depth = s.swell ? 0.4 : 0;
+  swell.gain.value = 1 - depth; swell.connect(master);
+  if (depth) {
+    const lfo = ctx.createOscillator(), lg = ctx.createGain();
+    lfo.frequency.value = s.bpm / 60; lg.gain.value = depth;
+    lfo.connect(lg); lg.connect(swell.gain); lfo.start(t0); lfo.stop(end);
+  }
+
+  if (s.padOn && s.padVol > 0) {
+    const chords = MOODS[s.mood] || MOODS.warm;
+    const filt = ctx.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.value = 900; filt.Q.value = 0.3;
+    const g = ctx.createGain(); g.gain.value = s.padVol * 0.16; filt.connect(g); g.connect(swell);
+    const oscs = [];
+    for (let v = 0; v < 4; v++) for (const det of [-7, 7]) {
+      const o = ctx.createOscillator(); o.type = "triangle"; o.detune.value = det;
+      o.frequency.setValueAtTime(midi(chords[0][v]), t0); o.connect(filt); oscs.push({o, v});
+    }
+    let k = 1;
+    for (let t = t0 + 16; t < end; t += 16, k++) { const ch = chords[k % chords.length]; for (const {o, v} of oscs) o.frequency.setTargetAtTime(midi(ch[v]), t, 1.2); }
+    for (const {o} of oscs) { o.start(t0); o.stop(end); }
+  }
+
+  if (s.oceanVol > 0) {
+    const src = ctx.createBufferSource(); src.buffer = oceanBuffer(ctx); src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 700;
+    const g = ctx.createGain(); g.gain.value = s.oceanVol * 0.5;
+    src.connect(lp); lp.connect(g); g.connect(swell); src.start(t0); src.stop(end);
+  }
+
+  if (music && s.musicVol > 0) {
+    const src = ctx.createBufferSource(); src.buffer = music; src.loop = true;
+    const g = ctx.createGain(); g.gain.value = s.musicVol; src.connect(g); g.connect(master); src.start(t0); src.stop(end);
+  }
+
+  if (voices.length && s.voiceVol > 0) {
+    const bus = ctx.createGain(); bus.gain.value = s.voiceVol; bus.connect(master);
+    if (s.reverb > 0) {
+      const conv = ctx.createConvolver(); conv.buffer = impulse(ctx, 2.8);
+      const wet = ctx.createGain(); wet.gain.value = s.reverb * 0.7;
+      bus.connect(conv); conv.connect(wet); wet.connect(master);
+    }
+    const order = voiceOrder(voices.length, Math.max(1, Math.round(s.repeats)), s.order);
+    let t = t0 + s.delay;
+    for (const i of order) {
+      const buf = voices[i];
+      if (t + buf.duration > end - fade * 0.5) break;
+      const src = ctx.createBufferSource(); src.buffer = buf; src.connect(bus); src.start(t);
+      t += buf.duration + s.gap;
+    }
+  }
+  return {t0, end};
+}
+async function selectedVoices(){
+  const out = [];
+  for (const t of takes) if (t.on && !t.broken) { try { out.push(await decodeTake(t)); } catch (e) {} }
+  return out;
+}
+
+// ---------- live playback + breath orb ----------
+let live = null, wake = null;
+async function play(){
+  if (live) return stop("Stopped.");
+  playbackSession();
+  const ctx = new AudioContext(); const resumed = ctx.resume();
+  const voices = await selectedVoices(); await resumed;
+  const dur = sessionSec(S, voices.map(v => v.duration));
+  const {t0} = buildMix(ctx, ctx.destination, {...S}, dur, voices, musicBuf);
+  live = {ctx, t0, dur, bpm: S.bpm};
+  $("#play").textContent = "Stop";
+  $("#status").textContent = voices.length ? `Playing ${voices.length} take${voices.length > 1 ? "s" : ""}${S.beat ? " over a " + S.beat + " Hz beat" : ""}.` : "Playing without voice. Record or tick a take to hear it.";
+  try { wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; }
+}
+function stop(msg){
+  if (live) { live.ctx.close(); live = null; }
+  if (wake) { wake.release().catch(() => {}); wake = null; }
+  $("#play").textContent = "Play"; $("#status").textContent = msg || "Ready."; syncControls();
+}
+$("#play").onclick = play;
+
+function frame(){
+  let elapsed, bpm = S.bpm;
+  if (live) {
+    elapsed = live.ctx.currentTime - live.t0; bpm = live.bpm;
+    $("#clock").textContent = fmtTime(elapsed) + " / " + fmtTime(live.dur);
+    if (elapsed >= live.dur) stop("Session complete.");
+  } else elapsed = performance.now() / 1000;
+  const ph = 2 * Math.PI * (bpm / 60) * Math.max(0, elapsed);
+  $("#orb").style.transform = `scale(${0.55 + 0.45 * (0.5 + 0.5 * Math.sin(ph))})`;
+  $("#breath-word").textContent = Math.cos(ph) >= 0 ? "Breathe in" : "Breathe out";
+  requestAnimationFrame(frame);
+}
+
+// ---------- export ----------
+const exportRate = sec => IOS ? (sec > 1200 ? 16000 : 22050) : sec > 1800 ? 16000 : sec > 900 ? 24000 : 32000;
+function toWav(buf){
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate, bytes = len * ch * 2;
+  const v = new DataView(new ArrayBuffer(44 + bytes));
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + bytes, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, sr, true);
+  v.setUint32(28, sr * ch * 2, true); v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, bytes, true);
+  const chans = Array.from({length: ch}, (_, i) => buf.getChannelData(i));
+  let o = 44;
+  for (let i = 0; i < len; i++) for (let c = 0; c < ch; c++) {
+    const x = Math.max(-1, Math.min(1, chans[c][i])); v.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true); o += 2;
+  }
+  return new Blob([v], {type: "audio/wav"});
+}
+async function renderMix(settings, voices, music){
+  const dur = sessionSec(settings, voices.map(v => v.duration)), sr = exportRate(dur);
+  const oc = new OfflineAudioContext(2, Math.ceil(sr * (dur + 0.2)), sr);
+  buildMix(oc, oc.destination, settings, dur, voices, music);
+  const bar = $("#export-bar"), fill = bar.querySelector("i");
+  bar.hidden = false; fill.style.width = "0";
+  try { for (let k = 1; k < 20; k++) oc.suspend(dur * k / 20).then(() => { fill.style.width = (k * 5) + "%"; oc.resume(); }); } catch (e) {}
+  const buf = await oc.startRendering();
+  fill.style.width = "100%";
+  return buf;
+}
+$("#export").onclick = async () => {
+  const btn = $("#export"); btn.disabled = true;
+  const voices = await selectedVoices(), sec = sessionSec(S, voices.map(v => v.duration));
+  const mb = Math.round(sec * exportRate(sec) * 4 / 1e6);
+  $("#status").textContent = `Rendering a ${fmtTime(sec)} mix (about ${mb} MB)…`;
+  try {
+    const buf = await renderMix({...S}, voices, musicBuf);
+    const band = (BEATS.find(b => b.v === +S.beat) || {n: S.beat + "Hz"}).n.toLowerCase();
+    const name = `affirmations-${band}-${S.minutes > 0 ? S.minutes + "min" : S.repeats + "x"}.wav`;
+    showResult(new File([toWav(buf)], name, {type: "audio/wav"}));
+    $("#status").textContent = IOS ? "Ready. Play it below; it keeps playing with the screen locked. Save or share to keep it in Files." : "Ready. Play it below or download the WAV.";
+  } catch (e) {
+    $("#status").textContent = "Export failed: " + (e.message || e) + ". Try a shorter length.";
+  } finally { btn.disabled = false; setTimeout(() => $("#export-bar").hidden = true, 2500); }
+};
+
+let resultFile = null, resultUrl = null;
+function showResult(file){
+  if (resultUrl) URL.revokeObjectURL(resultUrl);
+  resultFile = file; resultUrl = URL.createObjectURL(file);
+  $("#result-audio").src = resultUrl;
+  const link = $("#result-link"); link.href = resultUrl; link.download = file.name; link.textContent = "Download " + file.name;
+  $("#share").hidden = !(navigator.canShare && navigator.canShare({files: [file]}));
+  $("#result").hidden = false; playbackSession();
+}
+$("#share").onclick = async () => {
+  try { await navigator.share({files: [resultFile], title: resultFile.name}); }
+  catch (e) { if (e.name !== "AbortError") toast("Sharing failed. Use the Download link instead."); }
+};
+$("#result-close").onclick = () => { $("#result-audio").pause(); $("#result").hidden = true; };
+
+// ---------- boot ----------
+syncControls(); renderPrompter(); renderTakes(); loadTakes(); requestAnimationFrame(frame);
+window.__studio = {buildMix, renderMix, toWav, prepVoice, get S(){ return S; }};
+</script>
+</body>
+</html>
