@@ -75,6 +75,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:480px){.field{grid-template-columns:minmax(0,1fr) auto}.field input[type=range]{grid-column:1/-1;order:3}}
 input[type=range]{width:100%;accent-color:var(--accent)}
 input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+#inherit-pick{flex:1;min-width:0}
 select,input[type=number]{font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
 input[type=number]{width:84px}
 .note{font-size:14px;border-left:3px solid var(--wave);padding:2px 0 2px 10px;color:var(--muted);margin:0}
@@ -134,7 +135,8 @@ a{color:var(--wave)}
         </div>
         <p class="hint">One affirmation per line. Lines that name a cue and an action ("When I…, I will…") have the strongest evidence. Keep "I am" lines believable; claims that feel false can backfire.</p>
         <h3>Inheritance lines</h3>
-        <div class="chips" id="inherit-lines"></div>
+        <div class="row"><select id="inherit-pick" aria-label="Choose an inheritance line"></select><button id="inherit-add" disabled>Add line</button></div>
+        <p class="hint" id="inherit-preview">Pick a line to see it in full, then add it to your script.</p>
       </section>
 
       <section class="card">
@@ -251,17 +253,49 @@ a{color:var(--wave)}
 <div class="toast" id="toast" hidden></div>
 
 <script>
-// From the inheritance study (TPT and Mirror); each button adds its line to the script.
+// From the inheritance study (TPT and Mirror) and the God Speaks Wealth days (lines in my own words);
+// the picker adds the chosen line to the script.
 const INHERIT_LINES = [
-  {label: "+ Everything is mine", ref: "Galatians 4:7, Luke 15:31", line: "I am God's beloved son, and everything my Father has is mine."},
-  {label: "+ All the wealth", ref: "Galatians 4:7 (Mirror)", line: "My sonship qualifies me to share in all the wealth of God's inheritance."},
-  {label: "+ Heir of God", ref: "Romans 8:17", line: "I am an heir of God, and I share all that Christ is and all he has."},
-  {label: "+ Reign in life", ref: "Romans 5:17", line: "I reign in life through the gift of righteousness."},
-  {label: "+ Seated with Christ", ref: "Ephesians 2:6", line: "I am seated with Christ in his authority."},
-  {label: "+ No shortfall", ref: "Colossians 2:10 (Mirror)", line: "In Christ there is no shortfall in me."},
-  {label: "+ More than enough", ref: "2 Corinthians 9:8, 9:11", line: "God gives me more than enough, so I can be generous on every occasion."},
-  {label: "+ Power, love, self-control", ref: "2 Timothy 1:7", line: "God gives me power, love, and self-control, not fear."},
-  {label: "+ God's treasure", ref: "Ephesians 1:18 (Mirror), Psalm 16:5", line: "I am God's treasure, and he is my portion."}
+  {group: "From Scripture", label: "Everything is mine", ref: "Galatians 4:7, Luke 15:31", line: "I am God's beloved son, and everything my Father has is mine."},
+  {group: "From Scripture", label: "All the wealth", ref: "Galatians 4:7 (Mirror)", line: "My sonship qualifies me to share in all the wealth of God's inheritance."},
+  {group: "From Scripture", label: "Heir of God", ref: "Romans 8:17", line: "I am an heir of God, and I share all that Christ is and all he has."},
+  {group: "From Scripture", label: "Reign in life", ref: "Romans 5:17", line: "I reign in life through the gift of righteousness."},
+  {group: "From Scripture", label: "Seated with Christ", ref: "Ephesians 2:6", line: "I am seated with Christ in his authority."},
+  {group: "From Scripture", label: "No shortfall", ref: "Colossians 2:10 (Mirror)", line: "In Christ there is no shortfall in me."},
+  {group: "From Scripture", label: "More than enough", ref: "2 Corinthians 9:8, 9:11", line: "God gives me more than enough, so I can be generous on every occasion."},
+  {group: "From Scripture", label: "Power, love, self-control", ref: "2 Timothy 1:7", line: "God gives me power, love, and self-control, not fear."},
+  {group: "From Scripture", label: "God's treasure", ref: "Ephesians 1:18 (Mirror), Psalm 16:5", line: "I am God's treasure, and he is my portion."},
+  {group: "God Speaks Wealth, day by day", label: "Day 1 · Created in Abundance", ref: "Zephaniah 3:17", line: "God rejoices over me; I was made from His abundance."},
+  {group: "God Speaks Wealth, day by day", label: "Day 2 · Created in Abundance (Vine)", ref: "John 15:5", line: "I stay connected to the Vine, and fruit grows from His life in me."},
+  {group: "God Speaks Wealth, day by day", label: "Day 3 · Goodness Pursuing You", ref: "Psalm 23:6", line: "Goodness and mercy follow me all the days of my life."},
+  {group: "God Speaks Wealth, day by day", label: "Day 4 · You Are the Blessing", ref: "Genesis 12:2", line: "God blesses me so I can be a blessing to others."},
+  {group: "God Speaks Wealth, day by day", label: "Day 5 · Heaven's Economy", ref: "Philippians 4:19", line: "God supplies all I need from His riches, not from the world's limits."},
+  {group: "God Speaks Wealth, day by day", label: "Day 6 · Before You Ask", ref: "Matthew 6:8", line: "My Father knows what I need before I ask."},
+  {group: "God Speaks Wealth, day by day", label: "Day 7 · Rest as Your Wealth", ref: "Psalm 23:1", line: "The Lord is my shepherd; I have everything I need."},
+  {group: "God Speaks Wealth, day by day", label: "Day 8 · Seated in Heavenly Places", ref: "Ephesians 2:6", line: "I am seated with Christ in heavenly places, and I work from that seat."},
+  {group: "God Speaks Wealth, day by day", label: "Day 9 · Sons, Not Servants", ref: "Galatians 4:7", line: "I am a son, not a servant; I rest in my Father's love."},
+  {group: "God Speaks Wealth, day by day", label: "Day 10 · The Father's House", ref: "Luke 15:31", line: "I live like a son in my Father's house, not a hired hand."},
+  {group: "God Speaks Wealth, day by day", label: "Day 11 · Given, Not Earned", ref: "Ephesians 2:8-9", line: "My worth was given by grace, not earned by effort."},
+  {group: "God Speaks Wealth, day by day", label: "Day 12 · The Gift of Righteousness", ref: "2 Corinthians 5:21", line: "I am the righteousness of God in Christ."},
+  {group: "God Speaks Wealth, day by day", label: "Day 13 · Already Approved", ref: "Romans 8:1", line: "There is now no condemnation for me in Christ."},
+  {group: "God Speaks Wealth, day by day", label: "Day 14 · Nothing to Fear", ref: "Luke 12:32", line: "I do not fear; it is my Father's good pleasure to give me the kingdom."},
+  {group: "God Speaks Wealth, day by day", label: "Day 15 · The Widow's Oil", ref: "2 Kings 4:6", line: "Like the widow's oil, what I pour out keeps flowing."},
+  {group: "God Speaks Wealth, day by day", label: "Day 16 · The House of Bread", ref: "John 6:35", line: "Jesus is the bread of life, and I am never hungry in Him."},
+  {group: "God Speaks Wealth, day by day", label: "Day 17 · The Mirror Measure", ref: "Luke 6:38", line: "I give, and it is given back to me, pressed down and running over."},
+  {group: "God Speaks Wealth, day by day", label: "Day 18 · Multiplied by Sharing", ref: "John 6:9-11", line: "Five loaves in His hands fed thousands; I put what I have in His hands."},
+  {group: "God Speaks Wealth, day by day", label: "Day 19 · Abundance in Every Season", ref: "Psalm 1:3", line: "I am like a tree planted by streams of water; I bear fruit in every season."},
+  {group: "God Speaks Wealth, day by day", label: "Day 20 · Co-Creators", ref: "Ephesians 2:10", line: "I am God's workmanship, created to build good things with Him."},
+  {group: "God Speaks Wealth, day by day", label: "Day 21 · The Blessing That Overtakes You", ref: "Deuteronomy 28:2", line: "God's blessings come upon me and overtake me."},
+  {group: "God Speaks Wealth, day by day", label: "Day 22 · Generous in All Things", ref: "Proverbs 11:24-25", line: "I give freely and grow richer; I refresh others and I am refreshed."},
+  {group: "God Speaks Wealth, day by day", label: "Day 23 · The Feast at the Table", ref: "Psalm 23:5", line: "God prepares a table before me, even in the middle of trouble."},
+  {group: "God Speaks Wealth, day by day", label: "Day 24 · Wisdom as Wealth", ref: "Proverbs 3:13-14", line: "God's wisdom is worth more than gold, and I steward everything with it."},
+  {group: "God Speaks Wealth, day by day", label: "Day 25 · The Joy of Contentment", ref: "Philippians 4:11", line: "I have learned to be content in every situation."},
+  {group: "God Speaks Wealth, day by day", label: "Day 26 · The Overflow for Others", ref: "2 Corinthians 9:8", line: "God makes all grace abound to me, so I abound in every good work."},
+  {group: "God Speaks Wealth, day by day", label: "Day 27 · The Inheritance of Sons", ref: "Proverbs 13:22, Romans 8:17", line: "I am Christ's co-heir, and I build an inheritance for my children's children."},
+  {group: "God Speaks Wealth, day by day", label: "Day 28 · Abundant Life Now", ref: "John 10:10", line: "I live the abundant life Jesus came to give, starting today."},
+  {group: "God Speaks Wealth, day by day", label: "Day 29 · The Year of Restoration", ref: "Psalm 65:11, Joel 2:25", line: "God crowns my year with goodness and restores the years that were lost."},
+  {group: "God Speaks Wealth, day by day", label: "Day 30 · This Is the Day", ref: "Psalm 118:24", line: "This is the day the Lord has made; I rejoice and am glad in it."},
+  {group: "God Speaks Wealth, day by day", label: "Day 31 · Open Your Hands", ref: "James 1:17", line: "Every good gift comes from my Father, and I receive it with thanks."}
 ];
 const MY_LINE = "I am a son of God, living in my inheritance, billionaire husband and father—strong, wise, loving, generous, powerful, and kind.";
 // The starter script before MY_LINE became the default; a saved copy of it is replaced, an edited script is kept.
@@ -454,19 +488,36 @@ $("#beats").addEventListener("click", e => {
 });
 $("#presets").innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="chip" data-p="${k}">${p.name}</button>`).join("");
 $("#presets").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) applyPreset(c.dataset.p); });
-for (const l of INHERIT_LINES) {
-  const b = document.createElement("button"); b.className = "chip"; b.textContent = l.label;
-  b.dataset.tpl = l.line; b.title = l.ref + ": " + l.line; $("#inherit-lines").append(b);
+{
+  const pick = $("#inherit-pick"), first = document.createElement("option");
+  first.value = ""; first.textContent = "Choose a line…"; pick.append(first);
+  const groups = {};
+  INHERIT_LINES.forEach((l, i) => {
+    if (!groups[l.group]) { groups[l.group] = document.createElement("optgroup"); groups[l.group].label = l.group; pick.append(groups[l.group]); }
+    const o = document.createElement("option"); o.value = i; o.textContent = l.label; groups[l.group].append(o);
+  });
+  pick.onchange = () => {
+    const l = INHERIT_LINES[pick.value];
+    $("#inherit-add").disabled = !l;
+    $("#inherit-preview").textContent = l ? `"${l.line}" (${l.ref})` : "Pick a line to see it in full, then add it to your script.";
+  };
+  $("#inherit-add").onclick = () => {
+    const l = INHERIT_LINES[pick.value]; if (!l) return;
+    appendLine(l.line); pick.value = ""; $("#inherit-add").disabled = true;
+    $("#inherit-preview").textContent = "Added to your script.";
+  };
 }
 function addTemplate(e){
   const c = e.target.closest("[data-tpl], #my-line"); if (!c) return;
-  const ta = $("#script"); const t = c.id === "my-line" ? MY_LINE : c.dataset.tpl;
+  appendLine(c.id === "my-line" ? MY_LINE : c.dataset.tpl);
+}
+function appendLine(t){
+  const ta = $("#script");
   ta.value = ta.value.replace(/\s*$/, "") + (ta.value.trim() ? "\n" : "") + t;
   S.script = ta.value; saveSettings(); renderPrompter();
   ta.focus(); const i = ta.value.lastIndexOf("["); if (i >= 0) ta.setSelectionRange(i, ta.value.indexOf("]", i) + 1);
 }
 $("#templates").addEventListener("click", addTemplate);
-$("#inherit-lines").addEventListener("click", addTemplate);
 
 let toastTimer;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 4500); }
