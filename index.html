@@ -80,6 +80,11 @@ input[type=number]{width:84px}
 .note{font-size:14px;border-left:3px solid var(--wave);padding:2px 0 2px 10px;color:var(--muted);margin:0}
 .file{font-size:14px}
 .research ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.preset-info{display:flex;flex-direction:column;gap:4px;font-size:14px;background:var(--bg);border-radius:8px;padding:10px 12px}
+.preset-info b{font:700 16px/1.25 var(--f-display)}
+.preset-info .tag{font-weight:700;color:var(--wave)}
+.links{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+a{color:var(--wave)}
 .transport{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:5;
   padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .transport .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -151,15 +156,23 @@ input[type=number]{width:84px}
     <!-- MIX -->
     <div class="col">
       <section class="card">
+        <h2>Presets</h2>
+        <div class="chips" id="presets"></div>
+        <div class="preset-info" id="preset-info" aria-live="polite"></div>
+        <p class="hint">A preset sets the tones, music, breathing and timing. Your script, takes and own music stay as they are, so you can record and play your voice with any preset. Change any setting afterwards to make it your own.</p>
+      </section>
+
+      <section class="card">
         <h2>Binaural beat</h2>
         <div class="chips" id="beats"></div>
         <div class="row" style="font-size:14px"><label for="beat">Custom beat</label><input type="number" id="beat" data-k="beat" min="0" max="45" step="0.5"><span class="mono">Hz</span></div>
         <p class="note" id="beat-note"></p>
-        <div class="field"><label for="carrier">Carrier tone</label><input type="range" id="carrier" data-k="carrier" min="100" max="400" step="5"><output data-o="carrier"></output></div>
+        <div class="field"><label for="carrier">Carrier tone</label><input type="range" id="carrier" data-k="carrier" min="100" max="600" step="1"><output data-o="carrier"></output></div>
         <div class="field"><label for="beatVol">Beat volume</label><input type="range" id="beatVol" data-k="beatVol" min="0" max="0.3" step="0.01"><output data-o="beatVol"></output></div>
         <div class="row" style="font-size:14px"><input type="checkbox" id="glide" data-k="glide"><label for="glide">Start at 10 Hz and glide to the target over</label>
-          <select id="glideMin" data-k="glideMin" data-num><option value="2">2 min</option><option value="3">3 min</option><option value="5">5 min</option></select></div>
-        <p class="hint">Headphones required: each ear gets a slightly different tone, and the beat is the difference between them.</p>
+          <select id="glideMin" data-k="glideMin" data-num><option value="2">2 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="8">8 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="30">30 min</option></select></div>
+        <div class="field"><label for="pulse">Pulse the music</label><input type="range" id="pulse" data-k="pulse" min="0" max="0.6" step="0.05"><output data-o="pulse"></output></div>
+        <p class="hint">Headphones are needed for the binaural tones: each ear gets a slightly different tone, and the beat is the difference between them. Pulse the music makes the pad and ocean throb at the beat rate instead, Dr. Jeffrey Thompson's method, which also works on speakers.</p>
       </section>
 
       <section class="card">
@@ -170,6 +183,7 @@ input[type=number]{width:84px}
         <div class="field"><label for="oceanVol">Ocean wash</label><input type="range" id="oceanVol" data-k="oceanVol" min="0" max="1" step="0.01"><output data-o="oceanVol"></output></div>
         <div class="row" style="font-size:14px"><input type="checkbox" id="swell" data-k="swell"><label for="swell">Swell with my breathing pace</label></div>
         <div class="field"><label for="bpm">Breathing pace</label><input type="range" id="bpm" data-k="bpm" min="4" max="8" step="0.5"><output data-o="bpm"></output></div>
+        <div class="row" style="font-size:14px"><label for="ratio">Breath shape</label><select id="ratio" data-k="ratio" data-num><option value="0.5">Even in and out</option><option value="0.4">Out a little longer (2:3)</option><option value="0.333">Out twice as long (1:2)</option></select><span class="mono" id="breath-secs"></span></div>
         <p class="note">Breathing near 6 a minute (0.1 Hz) is the one rhythm here with strong evidence: it raises heart rate variability and settles stress. Breathe in as the sound rises, out as it falls.</p>
       </section>
 
@@ -178,6 +192,13 @@ input[type=number]{width:84px}
         <label class="file">Loop a track under the mix: <input type="file" id="music-file" accept="audio/*"></label>
         <div class="row" style="font-size:14px"><span id="music-name" class="hint">No track added.</span><span class="spacer"></span><button id="music-clear" hidden>Remove</button></div>
         <div class="field"><label for="musicVol">Music volume</label><input type="range" id="musicVol" data-k="musicVol" min="0" max="1" step="0.01"><output data-o="musicVol"></output></div>
+        <p class="hint">Free tracks whose licences allow looping under your voice:</p>
+        <ul class="links">
+          <li><a href="https://pixabay.com/music/search/meditation/" target="_blank" rel="noopener">Pixabay Music, meditation</a>: free, no credit needed.</li>
+          <li><a href="https://opengameart.org/content/indie-meditations-free-music-pack" target="_blank" rel="noopener">Indie Meditations by YannZ</a>: loopable ambient pack, CC BY 4.0 (credit the artist if you share).</li>
+          <li><a href="https://freemusicarchive.org/" target="_blank" rel="noopener">Free Music Archive</a>: filter by Ambient and a CC licence, and check each track's licence.</li>
+        </ul>
+        <p class="hint">Albums by Dr. Jeffrey Thompson, Dr. Joe Dispenza's composers and HeartMath are for listening on their own. Their licences don't allow remixing, so the presets copy their methods instead.</p>
       </section>
 
       <section class="card">
@@ -187,7 +208,9 @@ input[type=number]{width:84px}
         <div class="field"><label for="repeats">Repeat each line</label><input type="range" id="repeats" data-k="repeats" min="1" max="200" step="1"><output data-o="repeats"></output></div>
         <p class="note" id="repeat-summary"></p>
         <div class="field"><label for="gap">Pause between</label><input type="range" id="gap" data-k="gap" min="2" max="30" step="1"><output data-o="gap"></output></div>
-        <div class="field"><label for="delay">First voice at</label><input type="range" id="delay" data-k="delay" min="0" max="120" step="5"><output data-o="delay"></output></div>
+        <div class="field"><label for="delay">First voice at</label><input type="range" id="delay" data-k="delay" min="0" max="600" step="5"><output data-o="delay"></output></div>
+        <div class="field"><label for="voiceStop">Stop voice after</label><input type="range" id="voiceStop" data-k="voiceStop" min="0" max="60" step="1"><output data-o="voiceStop"></output></div>
+        <p class="hint">For falling asleep: words only register while you're still awake, so stop the voice and let the music carry on.</p>
         <div class="row" style="font-size:14px"><label for="order">Order</label><select id="order" data-k="order"><option value="seq">Cycle through lines</option><option value="grouped">Each line, all repeats in a row</option><option value="shuffle">Shuffled</option></select></div>
       </section>
 
@@ -198,6 +221,7 @@ input[type=number]{width:84px}
           <li>Your own voice, daily repetition and a clear cue-and-action plan do the work. New habits took a median of 66 days in the best-known study.</li>
           <li>Listen while awake and relaxed. Learning new material in sleep is limited to simple associations, so a pre-sleep session beats an all-night loop.</li>
           <li>The breathing pace is the most reliable part of a session; keep it on.</li>
+          <li>Of the teachers in the presets, only Dr. Jeffrey Thompson publishes beat frequencies. HeartMath, Gregg Braden, Dr. Joe Dispenza and Bruce Lipton prescribe breathing, timing and feeling.</li>
         </ul>
       </section>
     </div>
@@ -211,7 +235,7 @@ input[type=number]{width:84px}
     <button class="primary play" id="play">Play</button>
     <span class="mono" id="clock">0:00 / 15:00</span>
     <label class="row" style="font-size:14px;gap:6px" for="minutes">Length
-      <select id="minutes" data-k="minutes" data-num><option value="0">Fit repeats</option><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="30">30 min</option></select></label>
+      <select id="minutes" data-k="minutes" data-num><option value="0">Fit repeats</option><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option></select></label>
     <div class="status"><span id="status">Ready.</span><div class="bar" id="export-bar" hidden><i></i></div></div>
     <button id="export">Export WAV</button>
   </div>
@@ -225,9 +249,73 @@ input[type=number]{width:84px}
 <script>
 const DEFAULTS = {
   script: "When I sit down to work, I will start with the hardest task first.\nWhen I feel the urge to scroll, I take three slow breaths and stand up.\nI care about my health, and today I show it by moving my body.\nI am becoming someone who keeps promises to myself.",
-  beat: 10, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3,
-  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, bpm: 6,
-  musicVol: 0.5, voiceVol: 0.9, reverb: 0.25, gap: 6, delay: 15, order: "seq", minutes: 0, repeats: 70
+  beat: 10, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3, pulse: 0,
+  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, bpm: 6, ratio: 0.5,
+  musicVol: 0.5, voiceVol: 0.9, reverb: 0.25, gap: 6, delay: 15, voiceStop: 0, order: "seq", minutes: 0, repeats: 70,
+  preset: ""
+};
+// Presets set only these keys; script, takes, music, voice volume, repeats, gap and order stay the user's.
+const PRESET_BASE = {
+  beat: 0, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3, pulse: 0,
+  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, bpm: 6, ratio: 0.5,
+  reverb: 0.25, delay: 15, voiceStop: 0, minutes: 0
+};
+const PRESETS = {
+  heart: {name: "Heart Coherence", set: {beat: 0, oceanVol: 0.15, delay: 60, minutes: 10},
+    follows: "HeartMath Quick Coherence and Heart Lock-In: 5 seconds in, 5 seconds out.",
+    when: "Morning, before a stressful moment, after lunch or at bedtime, up to 3 times a day. Breathe with the swell and recall something you appreciate during the first minute.",
+    evidence: "Evidence-backed: breathing at 6 a minute raises heart rate variability and lowers stress.",
+    listen: "HeartMath's Quiet Joy on Apple Music, which includes two Heart Zones songs."},
+  braden: {name: "Braden Heart-Breath", set: {beat: 0, bpm: 5.5, oceanVol: 0.15, delay: 60, minutes: 10},
+    follows: "Gregg Braden: 5 to 6 second breaths, attention on the heart, gratitude.",
+    when: "Any time, especially before a decision.",
+    evidence: "Evidence-backed breathing pace.",
+    listen: "The Divine Name, Braden with Jonathan Goldman (Hay House)."},
+  silva: {name: "Silva Morning Alpha", set: {beat: 10, oceanVol: 0, delay: 120, minutes: 15},
+    follows: "Silva Method alpha level (7 to 14 cycles a second), reached with a countdown.",
+    when: "On waking, still in bed, eyes closed. Record a slow countdown from 10 to 1 as your first line.",
+    evidence: "Tradition only: no study shows the beat itself helps.",
+    listen: "Silva audio is sold through Nightingale-Conant."},
+  thompsonTheta: {name: "Thompson Theta", set: {beat: 5, carrier: 100, glide: true, glideMin: 8, pulse: 0.35, mood: "deep", oceanVol: 0.3, delay: 480, minutes: 30},
+    follows: "Dr. Jeffrey Thompson: his 100/105 Hz example, 4.5 to 5 Hz theta, about 30-minute programs, the pulse carried by the music.",
+    when: "Evening wind-down, seated, with headphones. The tones glide down for 8 minutes before your voice comes in.",
+    evidence: "Tradition only for the beat. Hearing the tones for a while before the words matches what binaural-beat studies found works best.",
+    listen: "His Theta Meditation System, and Delta Sleep System 2 at scientificsounds.com."},
+  monroe: {name: "Monroe Focus-10 style", set: {beat: 4, carrier: 100, beatVol: 0.12, padVol: 0.2, oceanVol: 0.15, delay: 240, minutes: 30},
+    follows: "Monroe Institute Hemi-Sync patent: 100 Hz carrier, beats under 30 Hz, noise kept under the tones. Monroe never published per-level frequencies.",
+    when: "Daytime, lying back. Record a \"mind awake, body asleep\" relaxation as your first line. Never while driving.",
+    evidence: "Tradition only.",
+    listen: "The Gateway Experience (Monroe Institute)."},
+  holosync: {name: "Holosync-style Dive", set: {beat: 2, carrier: 150, glide: true, glideMin: 30, swell: false, mood: "deep", padVol: 0.3, oceanVol: 0.25, delay: 120, minutes: 30},
+    follows: "Centerpointe Holosync: a daily dive from alpha down to delta. Centerpointe doesn't publish its frequencies.",
+    when: "Same time each day, seated.",
+    evidence: "Tradition only.",
+    listen: "Centerpointe's Holosync app."},
+  dispenza: {name: "Dispenza Two-Part", set: {beat: 0, mood: "deep", padVol: 0.5, oceanVol: 0.1, reverb: 0.6, delay: 540, minutes: 45},
+    follows: "Dr. Joe Dispenza: 45 to 60 minutes, music without vocals, a distant reverberant voice, staying out of sleep.",
+    when: "On waking or before bed, sitting up rather than lying in bed. Use the first 9 minutes for his breath, then your affirmations come in.",
+    evidence: "Tradition only for the structure; the slow-breathing part is evidence-backed.",
+    listen: "Barry Goldstein's The Infinite: Music for Heart and Brain Coherence, recommended by Dispenza's help center."},
+  lipton: {name: "Lipton Lights-Out", set: {beat: 6, carrier: 150, beatVol: 0.08, glide: true, glideMin: 15, pulse: 0.2, mood: "deep", padVol: 0.35, oceanVol: 0.3, delay: 90, voiceStop: 20, minutes: 45},
+    follows: "Bruce Lipton: your own voice, in the present tense, as you fall asleep.",
+    when: "In bed at lights-out with sleep-safe earbuds. Your voice stops at 20 minutes and the music fades out by 45.",
+    evidence: "Evidence-backed timing: words only register while you're still awake, and sound in deep sleep can hurt memory. The beat is tradition only.",
+    listen: "Bruce Lipton's Music for a Shift in Consciousness (Sounds True)."},
+  delta: {name: "Thompson Delta Drift", set: {beat: 2, carrier: 100, glide: true, glideMin: 10, pulse: 0.3, mood: "deep", padVol: 0.35, oceanVol: 0.4, bpm: 5.5, delay: 30, voiceStop: 10, minutes: 30},
+    follows: "Dr. Jeffrey Thompson's Delta Sleep System: slow, ocean-heavy, the pulse carried by the music.",
+    when: "Bedtime, on its own or after Lights-Out. Your takes play for the first 10 minutes; untick them for music only.",
+    evidence: "Tradition only.",
+    listen: "Delta Sleep System 2, a $19.97 download at scientificsounds.com."},
+  focus: {name: "Beta Focus", set: {beat: 16, pulse: 0.4, swell: false, oceanVol: 0.1, delay: 180, voiceStop: 8, minutes: 30},
+    follows: "Lane 1998 (beta beats improved alertness) and Brain.fm's 16 Hz music-pulse study.",
+    when: "Start 3 to 5 minutes before desk work. A short run of affirmations, then the voice stops and the music keeps you company.",
+    evidence: "Evidence-backed but weak: two small studies, one by Brain.fm staff.",
+    listen: "Brain.fm (subscription)."},
+  tuning: {name: "528 Hz Tuning", set: {beat: 10, carrier: 528, delay: 60, minutes: 15},
+    follows: "The Solfeggio 528 Hz tradition. Set the carrier to 432 for the 432 Hz version.",
+    when: "Whenever you like the sound.",
+    evidence: "Tradition only: the studies behind 528 and 432 Hz had 9 and 33 people. Treat it as a sound you like.",
+    listen: ""}
 };
 const BEATS = [
   {v:0, n:"Off"}, {v:2, n:"Delta"}, {v:6, n:"Theta"}, {v:10, n:"Alpha"},
@@ -254,9 +342,14 @@ const fmtTime = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s/60) +
 const pct = max => v => Math.round(v / max * 100) + "%";
 const FMT = {
   carrier: v => v + " Hz", beatVol: pct(0.3), padVol: pct(1), oceanVol: pct(1), musicVol: pct(1),
-  voiceVol: pct(1), reverb: pct(1), gap: v => v + " s", delay: v => v + " s", repeats: v => v + "×",
-  bpm: v => v.toFixed(1) + "/min · " + (v/60).toFixed(3) + " Hz"
+  voiceVol: pct(1), reverb: pct(1), gap: v => v + " s", delay: v => v < 60 ? v + " s" : fmtTime(v) + " min", repeats: v => v + "×",
+  bpm: v => v.toFixed(1) + "/min · " + (v/60).toFixed(3) + " Hz",
+  pulse: v => v ? Math.round(v * 100) + "% depth" : "Off", voiceStop: v => v ? v + " min" : "Never"
 };
+// Breath envelope over one cycle: 0 → 1 across the inhale (fraction r), 1 → 0 across the exhale. Shared by the swell and the orb.
+function breathLevel(frac, r){
+  return frac < r ? 0.5 - 0.5 * Math.cos(Math.PI * frac / r) : 0.5 + 0.5 * Math.cos(Math.PI * (frac - r) / (1 - r));
+}
 
 // ---------- settings ----------
 let S = {...DEFAULTS};
@@ -272,17 +365,40 @@ function sequenceSec(s, durations){
 }
 function sessionSec(s, durations){
   if (s.minutes > 0 || !durations.length) return (s.minutes || 15) * 60;
-  return s.delay + sequenceSec(s, durations) + 20;
+  let voice = s.delay + sequenceSec(s, durations);
+  if (s.voiceStop > 0) voice = Math.min(voice, s.voiceStop * 60);
+  return voice + 20;
+}
+// Seconds after the start by which every voice clip must have finished (the same rule buildMix schedules with).
+function voiceEndSec(s, dur){
+  const fadeEnd = dur - Math.min(15, dur / 6) * 0.5;
+  return s.voiceStop > 0 ? Math.min(s.voiceStop * 60, fadeEnd) : fadeEnd;
 }
 const takeDurations = () => takes.filter(t => t.on && !t.broken).map(t => t.duration);
 function renderRepeatSummary(){
   const d = takeDurations(), el = $("#repeat-summary");
   if (!d.length) { el.textContent = `Each line plays ${S.repeats} times once you record or tick a take.`; return; }
-  const seq = sequenceSec(S, d);
-  let msg = `${d.length} line${d.length > 1 ? "s" : ""} × ${S.repeats} = ${d.length * S.repeats} plays, ${fmtTime(seq)} of voice.`;
-  if (S.minutes > 0 && S.delay + seq > S.minutes * 60) msg += ` The ${S.minutes}-minute length cuts this short; choose Fit repeats to hear them all.`;
-  else if (S.minutes === 0) msg += ` Session length ${fmtTime(sessionSec(S, d))}.`;
+  const seq = sequenceSec(S, d), total = d.length * S.repeats;
+  let msg = `${d.length} line${d.length > 1 ? "s" : ""} × ${S.repeats} = ${total} plays, ${fmtTime(seq)} of voice.`;
+  const dur = sessionSec(S, d), stopAt = voiceEndSec(S, dur);
+  let fit = 0, t = S.delay;
+  for (const i of voiceOrder(d.length, S.repeats, S.order === "grouped" ? "grouped" : "seq")) { if (t + d[i] > stopAt) break; fit++; t += d[i] + S.gap; }
+  if (fit < total) msg += stopAt < voiceEndSec({...S, voiceStop: 0}, dur) ? ` The voice stops at ${S.voiceStop} min, so ${fit} plays fit.` : ` The ${fmtTime(dur)} length fits ${fit} plays; choose Fit repeats to hear them all.`;
+  if (S.minutes === 0) msg += ` Session length ${fmtTime(dur)}.`;
   el.textContent = msg;
+}
+function applyPreset(key){
+  const p = PRESETS[key]; if (!p) return;
+  Object.assign(S, PRESET_BASE, p.set, {preset: key}); saveSettings(); syncControls();
+}
+function renderPreset(){
+  document.querySelectorAll("#presets .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.p === S.preset)));
+  const box = $("#preset-info"), p = PRESETS[S.preset];
+  box.replaceChildren();
+  const add = (tag, text, cls) => { if (!text) return; const el = document.createElement(tag); el.textContent = text; if (cls) el.className = cls; box.append(el); };
+  if (!p) { add("span", "Custom settings. Pick a preset above to start from one of the researched methods.", "hint"); return; }
+  add("b", p.name); add("span", p.follows); add("span", "When: " + p.when);
+  add("span", p.evidence, "tag"); if (p.listen) add("span", "To hear the original: " + p.listen, "hint");
 }
 function syncControls(){
   document.querySelectorAll("[data-k]").forEach(el => {
@@ -294,14 +410,16 @@ function syncControls(){
   document.querySelectorAll("#beats .chip").forEach(c => c.setAttribute("aria-pressed", String(+c.dataset.v === +S.beat)));
   $("#beat-note").textContent = beatNote(+S.beat);
   $("#breath-rate").textContent = (+S.bpm).toFixed(1) + " / min";
+  const cyc = 60 / S.bpm; $("#breath-secs").textContent = (cyc * S.ratio).toFixed(1) + " s in · " + (cyc * (1 - S.ratio)).toFixed(1) + " s out";
   if (!live) $("#clock").textContent = "0:00 / " + fmtTime(sessionSec(S, takeDurations()));
-  renderRepeatSummary();
+  renderRepeatSummary(); renderPreset();
 }
 document.addEventListener("input", e => {
   const el = e.target; const k = el.dataset && el.dataset.k; if (!k) return;
   if (el.type === "checkbox") S[k] = el.checked;
   else if (el.type === "range" || el.type === "number" || "num" in el.dataset) S[k] = parseFloat(el.value) || 0;
   else S[k] = el.value;
+  if (k in PRESET_BASE) S.preset = "";
   saveSettings();
   if (k === "script") renderPrompter(); else syncControls();
 });
@@ -309,8 +427,10 @@ document.addEventListener("input", e => {
 $("#beats").innerHTML = BEATS.map(b => `<button class="chip" data-v="${b.v}">${b.n}${b.v ? `<span class="hz">${b.v} Hz</span>` : ""}</button>`).join("");
 $("#beats").addEventListener("click", e => {
   const c = e.target.closest(".chip"); if (!c) return;
-  S.beat = +c.dataset.v; saveSettings(); syncControls();
+  S.beat = +c.dataset.v; S.preset = ""; saveSettings(); syncControls();
 });
+$("#presets").innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="chip" data-p="${k}">${p.name}</button>`).join("");
+$("#presets").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) applyPreset(c.dataset.p); });
 $("#templates").addEventListener("click", e => {
   const c = e.target.closest("[data-tpl]"); if (!c) return;
   const ta = $("#script"); const t = c.dataset.tpl;
@@ -516,29 +636,41 @@ function buildMix(ctx, out, s, dur, voices, music){
     const merge = ctx.createChannelMerger(2), g = ctx.createGain(); g.gain.value = s.beatVol;
     merge.connect(g); g.connect(master);
     const L = ctx.createOscillator(), R = ctx.createOscillator(), c = s.carrier;
-    const b0 = s.glide ? 10 : s.beat;
-    L.frequency.setValueAtTime(c - b0 / 2, t0); R.frequency.setValueAtTime(c + b0 / 2, t0);
-    if (s.glide && s.beat !== 10) {
-      const tg = t0 + Math.min(s.glideMin * 60, dur / 2);
-      L.frequency.linearRampToValueAtTime(c - s.beat / 2, tg); R.frequency.linearRampToValueAtTime(c + s.beat / 2, tg);
-    }
     L.connect(merge, 0, 0); R.connect(merge, 0, 1);
+    beatRamp(L.frequency, c, -0.5); beatRamp(R.frequency, c, 0.5);
     L.start(t0); R.start(t0); L.stop(end); R.stop(end);
   }
+  // Sets param to base + sign·beat, gliding from 10 Hz when glide is on (shared by the binaural pair and the music pulse).
+  function beatRamp(param, base, sign){
+    const b0 = s.glide ? 10 : s.beat;
+    param.setValueAtTime(base + sign * b0, t0);
+    if (s.glide && s.beat !== 10) param.linearRampToValueAtTime(base + sign * s.beat, t0 + Math.min(s.glideMin * 60, dur * 0.9));
+  }
 
-  // breath swell: gain = (1 - d) + d * sin(2π · bpm/60 · t), rising = inhale
+  // breath swell: gain = (1 - 2d) + 2d · breathLevel, rising = inhale, cycle = 60/bpm s split by ratio
   const swell = ctx.createGain(), depth = s.swell ? 0.4 : 0;
-  swell.gain.value = 1 - depth; swell.connect(master);
+  swell.gain.value = 1 - 2 * depth; swell.connect(master);
   if (depth) {
-    const lfo = ctx.createOscillator(), lg = ctx.createGain();
-    lfo.frequency.value = s.bpm / 60; lg.gain.value = depth;
+    const sr = ctx.sampleRate, len = Math.round(sr * 60 / s.bpm), env = ctx.createBuffer(1, len, sr), d = env.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = breathLevel(i / len, s.ratio || 0.5);
+    const lfo = ctx.createBufferSource(), lg = ctx.createGain();
+    lfo.buffer = env; lfo.loop = true; lg.gain.value = 2 * depth;
     lfo.connect(lg); lg.connect(swell.gain); lfo.start(t0); lfo.stop(end);
+  }
+
+  // music pulse: pad and ocean throb at the beat rate, gain = 1 - p/2 + p/2 · sin(2π · beat · t)
+  const bed = ctx.createGain(); bed.connect(swell);
+  if (s.pulse > 0 && s.beat > 0) {
+    const p = Math.min(1, s.pulse), lfo = ctx.createOscillator(), lg = ctx.createGain();
+    bed.gain.value = 1 - p / 2; lg.gain.value = p / 2;
+    beatRamp(lfo.frequency, 0, 1);
+    lfo.connect(lg); lg.connect(bed.gain); lfo.start(t0); lfo.stop(end);
   }
 
   if (s.padOn && s.padVol > 0) {
     const chords = MOODS[s.mood] || MOODS.warm;
     const filt = ctx.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.value = 900; filt.Q.value = 0.3;
-    const g = ctx.createGain(); g.gain.value = s.padVol * 0.16; filt.connect(g); g.connect(swell);
+    const g = ctx.createGain(); g.gain.value = s.padVol * 0.16; filt.connect(g); g.connect(bed);
     const oscs = [];
     for (let v = 0; v < 4; v++) for (const det of [-7, 7]) {
       const o = ctx.createOscillator(); o.type = "triangle"; o.detune.value = det;
@@ -553,7 +685,7 @@ function buildMix(ctx, out, s, dur, voices, music){
     const src = ctx.createBufferSource(); src.buffer = oceanBuffer(ctx); src.loop = true;
     const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 700;
     const g = ctx.createGain(); g.gain.value = s.oceanVol * 0.5;
-    src.connect(lp); lp.connect(g); g.connect(swell); src.start(t0); src.stop(end);
+    src.connect(lp); lp.connect(g); g.connect(bed); src.start(t0); src.stop(end);
   }
 
   if (music && s.musicVol > 0) {
@@ -570,9 +702,10 @@ function buildMix(ctx, out, s, dur, voices, music){
     }
     const order = voiceOrder(voices.length, Math.max(1, Math.round(s.repeats)), s.order);
     let t = t0 + s.delay;
+    const voiceEnd = t0 + voiceEndSec(s, dur);
     for (const i of order) {
       const buf = voices[i];
-      if (t + buf.duration > end - fade * 0.5) break;
+      if (t + buf.duration > voiceEnd) break;
       const src = ctx.createBufferSource(); src.buffer = buf; src.connect(bus); src.start(t);
       t += buf.duration + s.gap;
     }
@@ -594,7 +727,7 @@ async function play(){
   const voices = await selectedVoices(); await resumed;
   const dur = sessionSec(S, voices.map(v => v.duration));
   const {t0} = buildMix(ctx, ctx.destination, {...S}, dur, voices, musicBuf);
-  live = {ctx, t0, dur, bpm: S.bpm};
+  live = {ctx, t0, dur, bpm: S.bpm, ratio: S.ratio};
   $("#play").textContent = "Stop";
   $("#status").textContent = voices.length ? `Playing ${voices.length} take${voices.length > 1 ? "s" : ""}${S.beat ? " over a " + S.beat + " Hz beat" : ""}.` : "Playing without voice. Record or tick a take to hear it.";
   try { wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; }
@@ -607,15 +740,15 @@ function stop(msg){
 $("#play").onclick = play;
 
 function frame(){
-  let elapsed, bpm = S.bpm;
+  let elapsed, bpm = S.bpm, ratio = S.ratio || 0.5;
   if (live) {
-    elapsed = live.ctx.currentTime - live.t0; bpm = live.bpm;
+    elapsed = live.ctx.currentTime - live.t0; bpm = live.bpm; ratio = live.ratio || 0.5;
     $("#clock").textContent = fmtTime(elapsed) + " / " + fmtTime(live.dur);
     if (elapsed >= live.dur) stop("Session complete.");
   } else elapsed = performance.now() / 1000;
-  const ph = 2 * Math.PI * (bpm / 60) * Math.max(0, elapsed);
-  $("#orb").style.transform = `scale(${0.55 + 0.45 * (0.5 + 0.5 * Math.sin(ph))})`;
-  $("#breath-word").textContent = Math.cos(ph) >= 0 ? "Breathe in" : "Breathe out";
+  const cyc = 60 / bpm, frac = (Math.max(0, elapsed) % cyc) / cyc;
+  $("#orb").style.transform = `scale(${0.55 + 0.45 * breathLevel(frac, ratio)})`;
+  $("#breath-word").textContent = frac < ratio ? "Breathe in" : "Breathe out";
   requestAnimationFrame(frame);
 }
 
@@ -654,7 +787,7 @@ $("#export").onclick = async () => {
   $("#status").textContent = `Rendering a ${fmtTime(sec)} mix (about ${mb} MB)…`;
   try {
     const buf = await renderMix({...S}, voices, musicBuf);
-    const band = (BEATS.find(b => b.v === +S.beat) || {n: S.beat + "Hz"}).n.toLowerCase();
+    const band = S.preset ? S.preset.replace(/[A-Z]/g, m => "-" + m.toLowerCase()) : (BEATS.find(b => b.v === +S.beat) || {n: S.beat + "Hz"}).n.toLowerCase();
     const name = `affirmations-${band}-${S.minutes > 0 ? S.minutes + "min" : S.repeats + "x"}.wav`;
     showResult(new File([toWav(buf)], name, {type: "audio/wav"}));
     $("#status").textContent = IOS ? "Ready. Play it below; it keeps playing with the screen locked. Save or share to keep it in Files." : "Ready. Play it below or download the WAV.";
@@ -680,7 +813,7 @@ $("#result-close").onclick = () => { $("#result-audio").pause(); $("#result").hi
 
 // ---------- boot ----------
 syncControls(); renderPrompter(); renderTakes(); loadTakes(); requestAnimationFrame(frame);
-window.__studio = {buildMix, renderMix, toWav, prepVoice, get S(){ return S; }};
+window.__studio = {buildMix, renderMix, toWav, prepVoice, applyPreset, PRESETS, breathLevel, sessionSec, get S(){ return S; }};
 </script>
 </body>
 </html>
