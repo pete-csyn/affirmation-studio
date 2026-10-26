@@ -126,6 +126,7 @@ a{color:var(--wave)}
         <h2>Your script</h2>
         <textarea id="script" data-k="script" aria-label="Affirmation script, one line per affirmation"></textarea>
         <div class="chips" id="templates">
+          <button class="chip" id="my-line">+ My line</button>
           <button class="chip" data-tpl="When I [situation], I will [action].">+ If-then plan</button>
           <button class="chip" data-tpl="I care about [value], and today I show it by [action].">+ Values</button>
           <button class="chip" data-tpl="I am becoming someone who [habit], one day at a time.">+ Identity</button>
@@ -248,8 +249,11 @@ a{color:var(--wave)}
 <div class="toast" id="toast" hidden></div>
 
 <script>
+const MY_LINE = "I am a son of God, living in my inheritance, billionaire husband and father—strong, wise, loving, generous, powerful, and kind.";
+// The starter script before MY_LINE became the default; a saved copy of it is replaced, an edited script is kept.
+const OLD_DEFAULT_SCRIPT = "When I sit down to work, I will start with the hardest task first.\nWhen I feel the urge to scroll, I take three slow breaths and stand up.\nI care about my health, and today I show it by moving my body.\nI am becoming someone who keeps promises to myself.";
 const DEFAULTS = {
-  script: "When I sit down to work, I will start with the hardest task first.\nWhen I feel the urge to scroll, I take three slow breaths and stand up.\nI care about my health, and today I show it by moving my body.\nI am becoming someone who keeps promises to myself.",
+  script: MY_LINE,
   beat: 10, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3, pulse: 0,
   padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, swellMin: 0, bpm: 6, ratio: 0.5,
   musicVol: 0.5, voiceVol: 0.9, reverb: 0.25, gap: 6, delay: 15, voiceStop: 0, order: "seq", minutes: 0, repeats: 70,
@@ -357,6 +361,7 @@ let S = {...DEFAULTS};
 try {
   const saved = JSON.parse(localStorage.getItem("as-settings") || "{}");
   if (!("repeats" in saved)) delete saved.minutes; // first run with repeats: default length to "fit repeats"
+  if (saved.script === OLD_DEFAULT_SCRIPT) delete saved.script;
   Object.assign(S, saved);
 } catch (e) {}
 function saveSettings(){ try { localStorage.setItem("as-settings", JSON.stringify(S)); } catch (e) {} }
@@ -436,8 +441,8 @@ $("#beats").addEventListener("click", e => {
 $("#presets").innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="chip" data-p="${k}">${p.name}</button>`).join("");
 $("#presets").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) applyPreset(c.dataset.p); });
 $("#templates").addEventListener("click", e => {
-  const c = e.target.closest("[data-tpl]"); if (!c) return;
-  const ta = $("#script"); const t = c.dataset.tpl;
+  const c = e.target.closest("[data-tpl], #my-line"); if (!c) return;
+  const ta = $("#script"); const t = c.id === "my-line" ? MY_LINE : c.dataset.tpl;
   ta.value = ta.value.replace(/\s*$/, "") + (ta.value.trim() ? "\n" : "") + t;
   S.script = ta.value; saveSettings(); renderPrompter();
   ta.focus(); const i = ta.value.lastIndexOf("["); if (i >= 0) ta.setSelectionRange(i, ta.value.indexOf("]", i) + 1);
