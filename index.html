@@ -133,6 +133,8 @@ a{color:var(--wave)}
           <button class="chip" data-tpl="When I feel [urge], I take three slow breaths and [replacement].">+ Urge swap</button>
         </div>
         <p class="hint">One affirmation per line. Lines that name a cue and an action ("When I…, I will…") have the strongest evidence. Keep "I am" lines believable; claims that feel false can backfire.</p>
+        <h3>Inheritance lines</h3>
+        <div class="chips" id="inherit-lines"></div>
       </section>
 
       <section class="card">
@@ -249,6 +251,18 @@ a{color:var(--wave)}
 <div class="toast" id="toast" hidden></div>
 
 <script>
+// From the inheritance study (TPT and Mirror); each button adds its line to the script.
+const INHERIT_LINES = [
+  {label: "+ Everything is mine", ref: "Galatians 4:7, Luke 15:31", line: "I am God's beloved son, and everything my Father has is mine."},
+  {label: "+ All the wealth", ref: "Galatians 4:7 (Mirror)", line: "My sonship qualifies me to share in all the wealth of God's inheritance."},
+  {label: "+ Heir of God", ref: "Romans 8:17", line: "I am an heir of God, and I share all that Christ is and all he has."},
+  {label: "+ Reign in life", ref: "Romans 5:17", line: "I reign in life through the gift of righteousness."},
+  {label: "+ Seated with Christ", ref: "Ephesians 2:6", line: "I am seated with Christ in his authority."},
+  {label: "+ No shortfall", ref: "Colossians 2:10 (Mirror)", line: "In Christ there is no shortfall in me."},
+  {label: "+ More than enough", ref: "2 Corinthians 9:8, 9:11", line: "God gives me more than enough, so I can be generous on every occasion."},
+  {label: "+ Power, love, self-control", ref: "2 Timothy 1:7", line: "God gives me power, love, and self-control, not fear."},
+  {label: "+ God's treasure", ref: "Ephesians 1:18 (Mirror), Psalm 16:5", line: "I am God's treasure, and he is my portion."}
+];
 const MY_LINE = "I am a son of God, living in my inheritance, billionaire husband and father—strong, wise, loving, generous, powerful, and kind.";
 // The starter script before MY_LINE became the default; a saved copy of it is replaced, an edited script is kept.
 const OLD_DEFAULT_SCRIPT = "When I sit down to work, I will start with the hardest task first.\nWhen I feel the urge to scroll, I take three slow breaths and stand up.\nI care about my health, and today I show it by moving my body.\nI am becoming someone who keeps promises to myself.";
@@ -440,13 +454,19 @@ $("#beats").addEventListener("click", e => {
 });
 $("#presets").innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="chip" data-p="${k}">${p.name}</button>`).join("");
 $("#presets").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) applyPreset(c.dataset.p); });
-$("#templates").addEventListener("click", e => {
+for (const l of INHERIT_LINES) {
+  const b = document.createElement("button"); b.className = "chip"; b.textContent = l.label;
+  b.dataset.tpl = l.line; b.title = l.ref + ": " + l.line; $("#inherit-lines").append(b);
+}
+function addTemplate(e){
   const c = e.target.closest("[data-tpl], #my-line"); if (!c) return;
   const ta = $("#script"); const t = c.id === "my-line" ? MY_LINE : c.dataset.tpl;
   ta.value = ta.value.replace(/\s*$/, "") + (ta.value.trim() ? "\n" : "") + t;
   S.script = ta.value; saveSettings(); renderPrompter();
   ta.focus(); const i = ta.value.lastIndexOf("["); if (i >= 0) ta.setSelectionRange(i, ta.value.indexOf("]", i) + 1);
-});
+}
+$("#templates").addEventListener("click", addTemplate);
+$("#inherit-lines").addEventListener("click", addTemplate);
 
 let toastTimer;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 4500); }
