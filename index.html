@@ -181,7 +181,8 @@ a{color:var(--wave)}
           <label for="mood">Mood</label><select id="mood" data-k="mood"><option value="warm">Warm (major)</option><option value="deep">Deep (minor)</option></select></div>
         <div class="field"><label for="padVol">Pad volume</label><input type="range" id="padVol" data-k="padVol" min="0" max="1" step="0.01"><output data-o="padVol"></output></div>
         <div class="field"><label for="oceanVol">Ocean wash</label><input type="range" id="oceanVol" data-k="oceanVol" min="0" max="1" step="0.01"><output data-o="oceanVol"></output></div>
-        <div class="row" style="font-size:14px"><input type="checkbox" id="swell" data-k="swell"><label for="swell">Swell with my breathing pace</label></div>
+        <div class="row" style="font-size:14px"><input type="checkbox" id="swell" data-k="swell"><label for="swell">Swell with my breathing pace</label>
+          <select id="swellMin" data-k="swellMin" data-num aria-label="How long the swell lasts"><option value="0">for the whole session</option><option value="5">for the first 5 min</option><option value="10">for the first 10 min</option><option value="15">for the first 15 min</option></select></div>
         <div class="field"><label for="bpm">Breathing pace</label><input type="range" id="bpm" data-k="bpm" min="4" max="8" step="0.5"><output data-o="bpm"></output></div>
         <div class="row" style="font-size:14px"><label for="ratio">Breath shape</label><select id="ratio" data-k="ratio" data-num><option value="0.5">Even in and out</option><option value="0.4">Out a little longer (2:3)</option><option value="0.333">Out twice as long (1:2)</option></select><span class="mono" id="breath-secs"></span></div>
         <p class="note">Breathing near 6 a minute (0.1 Hz) is the one rhythm here with strong evidence: it raises heart rate variability and settles stress. Breathe in as the sound rises, out as it falls.</p>
@@ -250,14 +251,14 @@ a{color:var(--wave)}
 const DEFAULTS = {
   script: "When I sit down to work, I will start with the hardest task first.\nWhen I feel the urge to scroll, I take three slow breaths and stand up.\nI care about my health, and today I show it by moving my body.\nI am becoming someone who keeps promises to myself.",
   beat: 10, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3, pulse: 0,
-  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, bpm: 6, ratio: 0.5,
+  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, swellMin: 0, bpm: 6, ratio: 0.5,
   musicVol: 0.5, voiceVol: 0.9, reverb: 0.25, gap: 6, delay: 15, voiceStop: 0, order: "seq", minutes: 0, repeats: 70,
   preset: ""
 };
 // Presets set only these keys; script, takes, music, voice volume, repeats, gap and order stay the user's.
 const PRESET_BASE = {
   beat: 0, carrier: 200, beatVol: 0.1, glide: false, glideMin: 3, pulse: 0,
-  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, bpm: 6, ratio: 0.5,
+  padOn: true, mood: "warm", padVol: 0.45, oceanVol: 0.2, swell: true, swellMin: 0, bpm: 6, ratio: 0.5,
   reverb: 0.25, delay: 15, voiceStop: 0, minutes: 0
 };
 const PRESETS = {
@@ -286,9 +287,9 @@ const PRESETS = {
     when: "Daytime, lying back. Record a \"mind awake, body asleep\" relaxation as your first line. Never while driving.",
     evidence: "Tradition only.",
     listen: "The Gateway Experience (Monroe Institute)."},
-  holosync: {name: "Holosync-style Dive", set: {beat: 2, carrier: 150, glide: true, glideMin: 30, swell: false, mood: "deep", padVol: 0.3, oceanVol: 0.25, delay: 120, minutes: 30},
+  holosync: {name: "Holosync-style Dive", set: {beat: 2, carrier: 150, glide: true, glideMin: 30, swellMin: 5, mood: "deep", padVol: 0.3, oceanVol: 0.25, delay: 120, minutes: 30},
     follows: "Centerpointe Holosync: a daily dive from alpha down to delta. Centerpointe doesn't publish its frequencies.",
-    when: "Same time each day, seated.",
+    when: "Same time each day, seated. The swell paces your breathing for the first 5 minutes, then goes still.",
     evidence: "Tradition only.",
     listen: "Centerpointe's Holosync app."},
   dispenza: {name: "Dispenza Two-Part", set: {beat: 0, mood: "deep", padVol: 0.5, oceanVol: 0.1, reverb: 0.6, delay: 540, minutes: 45},
@@ -296,20 +297,20 @@ const PRESETS = {
     when: "On waking or before bed, sitting up rather than lying in bed. Use the first 9 minutes for his breath, then your affirmations come in.",
     evidence: "Tradition only for the structure; the slow-breathing part is evidence-backed.",
     listen: "Barry Goldstein's The Infinite: Music for Heart and Brain Coherence, recommended by Dispenza's help center."},
-  lipton: {name: "Lipton Lights-Out", set: {beat: 6, carrier: 150, beatVol: 0.08, glide: true, glideMin: 15, pulse: 0.2, mood: "deep", padVol: 0.35, oceanVol: 0.3, delay: 90, voiceStop: 20, minutes: 45},
+  lipton: {name: "Lipton Lights-Out", set: {beat: 6, carrier: 150, beatVol: 0.08, glide: true, glideMin: 15, pulse: 0.2, swellMin: 5, mood: "deep", padVol: 0.35, oceanVol: 0.3, delay: 90, voiceStop: 20, minutes: 45},
     follows: "Bruce Lipton: your own voice, in the present tense, as you fall asleep.",
-    when: "In bed at lights-out with sleep-safe earbuds. Your voice stops at 20 minutes and the music fades out by 45.",
+    when: "In bed at lights-out with sleep-safe earbuds. The swell paces your breathing for 5 minutes, then goes still; your voice stops at 20 minutes and the music fades out by 45.",
     evidence: "Evidence-backed timing: words only register while you're still awake, and sound in deep sleep can hurt memory. The beat is tradition only.",
     listen: "Bruce Lipton's Music for a Shift in Consciousness (Sounds True)."},
-  delta: {name: "Thompson Delta Drift", set: {beat: 2, carrier: 100, glide: true, glideMin: 10, pulse: 0.3, mood: "deep", padVol: 0.35, oceanVol: 0.4, bpm: 5.5, delay: 30, voiceStop: 10, minutes: 30},
+  delta: {name: "Thompson Delta Drift", set: {beat: 2, carrier: 100, glide: true, glideMin: 10, pulse: 0.3, mood: "deep", padVol: 0.35, oceanVol: 0.4, swellMin: 5, delay: 30, voiceStop: 10, minutes: 30},
     follows: "Dr. Jeffrey Thompson's Delta Sleep System: slow, ocean-heavy, the pulse carried by the music.",
-    when: "Bedtime, on its own or after Lights-Out. Your takes play for the first 10 minutes; untick them for music only.",
+    when: "Bedtime, on its own or after Lights-Out. The swell paces your breathing for 5 minutes, then goes still. Your takes play for the first 10 minutes; untick them for music only.",
     evidence: "Tradition only.",
     listen: "Delta Sleep System 2, a $19.97 download at scientificsounds.com."},
   focus: {name: "Beta Focus", set: {beat: 16, pulse: 0.4, swell: false, oceanVol: 0.1, delay: 180, voiceStop: 8, minutes: 30},
     follows: "Lane 1998 (beta beats improved alertness) and Brain.fm's 16 Hz music-pulse study.",
     when: "Start 3 to 5 minutes before desk work. A short run of affirmations, then the voice stops and the music keeps you company.",
-    evidence: "Evidence-backed but weak: two small studies, one by Brain.fm staff.",
+    evidence: "Evidence-backed but weak: two modest studies (29 and 82 people), one by Brain.fm staff.",
     listen: "Brain.fm (subscription)."},
   tuning: {name: "528 Hz Tuning", set: {beat: 10, carrier: 528, delay: 60, minutes: 15},
     follows: "The Solfeggio 528 Hz tradition. Set the carrier to 432 for the 432 Hz version.",
@@ -381,9 +382,12 @@ function renderRepeatSummary(){
   const seq = sequenceSec(S, d), total = d.length * S.repeats;
   let msg = `${d.length} line${d.length > 1 ? "s" : ""} × ${S.repeats} = ${total} plays, ${fmtTime(seq)} of voice.`;
   const dur = sessionSec(S, d), stopAt = voiceEndSec(S, dur);
+  // Shuffled order is random per session, so estimate with the average take length.
+  const shuffled = S.order === "shuffle" && d.length > 1, mean = d.reduce((a, b) => a + b) / d.length;
   let fit = 0, t = S.delay;
-  for (const i of voiceOrder(d.length, S.repeats, S.order === "grouped" ? "grouped" : "seq")) { if (t + d[i] > stopAt) break; fit++; t += d[i] + S.gap; }
-  if (fit < total) msg += stopAt < voiceEndSec({...S, voiceStop: 0}, dur) ? ` The voice stops at ${S.voiceStop} min, so ${fit} plays fit.` : ` The ${fmtTime(dur)} length fits ${fit} plays; choose Fit repeats to hear them all.`;
+  for (const i of voiceOrder(d.length, S.repeats, S.order === "grouped" ? "grouped" : "seq")) { const len = shuffled ? mean : d[i]; if (t + len > stopAt) break; fit++; t += len + S.gap; }
+  const n = (shuffled ? "about " : "") + fit;
+  if (fit < total) msg += stopAt < voiceEndSec({...S, voiceStop: 0}, dur) ? ` The voice stops at ${S.voiceStop} min, so ${n} plays fit.` : ` The ${fmtTime(dur)} length fits ${n} plays; choose Fit repeats to hear them all.`;
   if (S.minutes === 0) msg += ` Session length ${fmtTime(dur)}.`;
   el.textContent = msg;
 }
@@ -644,7 +648,7 @@ function buildMix(ctx, out, s, dur, voices, music){
   function beatRamp(param, base, sign){
     const b0 = s.glide ? 10 : s.beat;
     param.setValueAtTime(base + sign * b0, t0);
-    if (s.glide && s.beat !== 10) param.linearRampToValueAtTime(base + sign * s.beat, t0 + Math.min(s.glideMin * 60, dur * 0.9));
+    if (s.glide && s.beat !== 10) param.linearRampToValueAtTime(base + sign * s.beat, t0 + Math.min(s.glideMin * 60, dur));
   }
 
   // breath swell: gain = (1 - 2d) + 2d · breathLevel, rising = inhale, cycle = 60/bpm s split by ratio
@@ -656,6 +660,12 @@ function buildMix(ctx, out, s, dur, voices, music){
     const lfo = ctx.createBufferSource(), lg = ctx.createGain();
     lfo.buffer = env; lfo.loop = true; lg.gain.value = 2 * depth;
     lfo.connect(lg); lg.connect(swell.gain); lfo.start(t0); lfo.stop(end);
+    // swell for the first N minutes only: settle to the mid level over 8 s, then hold still
+    if (s.swellMin > 0 && s.swellMin * 60 < dur) {
+      const tOff = t0 + s.swellMin * 60;
+      lg.gain.setValueAtTime(2 * depth, tOff); lg.gain.linearRampToValueAtTime(0, tOff + 8);
+      swell.gain.setValueAtTime(1 - 2 * depth, tOff); swell.gain.linearRampToValueAtTime(1 - depth, tOff + 8);
+    }
   }
 
   // music pulse: pad and ocean throb at the beat rate, gain = 1 - p/2 + p/2 · sin(2π · beat · t)
